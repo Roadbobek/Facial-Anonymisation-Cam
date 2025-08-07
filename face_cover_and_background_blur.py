@@ -4,7 +4,7 @@ import cv2
 
 # --- Settings ---
 blur_bg = True
-cutey_mode = False
+cutey_mode = True
 
 # --- Initialization ---
 # Get a reference to webcam #0 (the default one).
@@ -98,7 +98,7 @@ while True:
             # --- Cutey mode! >v< ---
             if cutey_mode:
                 font = cv2.FONT_HERSHEY_DUPLEX
-                text = ">v<"
+                text = "ovo"
                 text_color = (255, 255, 255)
                 text_thickness = 2
 
