@@ -5,7 +5,7 @@
 /mavenHomeManager.xml
 
 /discord.xml
-dlib/ linguist-generated=true
+dlib/ linguist-vendored=false
 
 
 # Byte-compiled / optimized / DLL files
