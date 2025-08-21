@@ -19,12 +19,12 @@ https://github.com/ageitgey/face_recognition.
 ### Requirements
 
 - Python 3.8.2
-  - face_recognition
-      - (pip module, in CMD/Terminal run 'pip install face_recognition'.)
-  - cv2
-      - (pip module, in CMD/Terminal run 'pip install opencv-python'.)
+    - face_recognition
+        - (pip module, in CMD/Terminal run 'pip install face_recognition'.)
+    - cv2
+        - (pip module, in CMD/Terminal run 'pip install opencv-python'.)
 - All face_recognition requirements
-  - https://github.com/ageitgey/face_recognition
+    - https://github.com/ageitgey/face_recognition
 
 ## License
 
