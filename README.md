@@ -1,4 +1,4 @@
-# *Face Cover And Background Blur*
+# *Facial Anonymisation Cam*
 
 ### This project provides real-time facial anonymisation. It is built using Python, leveraging the [face_recognition](https://github.com/ageitgey/face_recognition) library for its straightforward implementation of facial detection and landmarks, alongside opencv-python for image manipulation. This project can run on CUDA GPUs for enhanced performance.
 
@@ -12,10 +12,7 @@
 
 ### Demonstration
 
-<video width="640" height="360" controls>
-  <source src="Facial_anonymisation.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+[![Demo Video](https://img.youtube.com/vi/6wMMOnadwXo/maxresdefault.jpg)](https://www.youtube.com/watch?v=6wMMOnadwXo)
 
 ---
 
