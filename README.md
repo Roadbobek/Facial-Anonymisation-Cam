@@ -10,9 +10,11 @@
 
 ---
 
-### Demonstration
+### Demonstration Video
 
-[![Demo Video](https://img.youtube.com/vi/6wMMOnadwXo/maxresdefault.jpg)](https://www.youtube.com/watch?v=6wMMOnadwXo)
+[![Demo Video](https://img.youtube.com/vi/6wMMOnadwXo/hqdefault.jpg)](https://www.youtube.com/watch?v=6wMMOnadwXo)
+
+### ***Click Me! ^^^***
 
 ---
 
