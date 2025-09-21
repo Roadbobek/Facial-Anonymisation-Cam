@@ -1,5 +1,5 @@
 import os
-e
+
 # Add the paths to the CUDA and cuDNN bin directories for dlib, for Python 3.9 compatibility
 os.add_dll_directory("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.0/bin/x64")
 os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v9.12/bin/13.0")
@@ -13,22 +13,27 @@ from numba import cuda
 import time
 import random
 import colorsys
+import threading
 
+from face_anonimiser_v2_GUI import face_anon_gui
 
 
 
 # ------------------------------------------------------ Settings ------------------------------------------------------
+
 output_to_vcam = True # Output video to first virtual webcam found, for eg OBS.
 
 flip_cam_input = False # Some apps, for eg discord automatically flip your camera. This is used to combat that.
 
-flip_output_to_cam = False # Some apps, for eg discord automatically flip your camera. This is used to combat that.
+flip_output_to_vcam = False # Some apps, for eg discord automatically flip your camera. This is used to combat that.
 
 use_cuda_gpu = True # False will use CPU
 
-scale_output_to = (1920, 1080) # Resolution to scale the final image output to.
+scale_output_to = [1920, 1080] # Resolution to scale the final image output to.
 
 scale_window_to = scale_output_to
+
+fps_cap = 30 # Set a custom fps cap value, for eg 30, 60 or None to turn off.
 
 half_processing = False
 
@@ -45,7 +50,7 @@ corruption = False
 corruption_percent = 90 # Percent chance of column being coloured
 
 corruption_double = False
-corruption_double_percent = 85 # Percent Percent chance of pixel being coloured
+corruption_double_percent = 85 # Percent Percent chance of pixel being coloured (Percent Percent 😎)
 
 blur_bg = False
 
@@ -66,6 +71,7 @@ fps_counter = True
 
 title = True
 title_text = "Roadbobek Cam"
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 
@@ -79,11 +85,17 @@ video_capture = cv2.VideoCapture(0)
 cam_horz_res = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
 cam_vert_res = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
+cam_fps = video_capture.get(cv2.CAP_PROP_FPS)
+
+# if fps_cap = None, set fps_cat to cam_fps
+if not fps_cap:
+    fps_cap = cam_fps
+
 # Attach to virtual camera, for eg obs
-if output_to_vcam:
-    cam = pyvirtualcam.Camera(width=scale_output_to[0], height=scale_output_to[1], fps=30)
-    print("Sending output to virtual camera.")
-    print(f'Using virtual camera: {cam.device}.')
+# if output_to_vcam:, now that we have a GUI that can toggle this on and off, if it is off and we toggle it on and we dont have cam defined it will give an error and thats supposably bad i think
+cam = pyvirtualcam.Camera(width=scale_output_to[0], height=scale_output_to[1], fps=fps_cap)
+print("Sending output to virtual camera.")
+print(f'Using virtual camera: {cam.device}.')
 
 # --- Live Video Processing Variables ---
 face_locations = []
@@ -139,12 +151,16 @@ else:
 
 
 if scale_output_to[0] == int(cam_horz_res) and scale_output_to[1] == int(cam_vert_res): # If scale_output_to and camera resolution is the same
-    print(f"Not scaling output since resolution is the same: Scale Output - {scale_output_to}, Camera - ({int(cam_horz_res)}, {int(cam_vert_res)}).")
+    print(f"Not scaling output since resolution is the same: Scale Output To - {scale_output_to}, Camera - ({int(cam_horz_res)}, {int(cam_vert_res)}).")
 else:
     print(f"Scaling output to {scale_output_to} from ({int(cam_horz_res)}, {int(cam_vert_res)}).")
 
-cam_fps = video_capture.get(cv2.CAP_PROP_FPS)
 print(f"Camera capturing at {cam_fps} FPS.")
+
+if fps_cap == cam_fps:
+    print("FPS capped at camera FPS.")
+else:
+    print(f"FPS capped at {fps_cap} FPS.")
 
 # Create window, it is resizable but will keeps its scale. https://docs.opencv.org/3.4/d7/dfc/group__highgui.html
 cv2.namedWindow("Roadbobek Cam", flags=cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
@@ -159,8 +175,32 @@ print("Starting video capture...")
 print("------- Press Q to exit. -------")
 # print()
 
+# ------ GUI ------
+# Create shared settings dict, dicts are mutable so it will share state
+shared_state = {
+    'output_to_vcam': output_to_vcam,
+    'flip_cam_input': flip_cam_input,
+    'flip_output_to_vcam': flip_output_to_vcam,
+    'fps_counter': fps_counter,
+    'use_cuda_gpu': use_cuda_gpu,
+    'scale_output_to': scale_output_to
+}
 
-program_start_time = time.time() # Get the start time of the main loop
+my_gui = None
+# Create and start GUI in a separate thread
+def start_gui():
+    # Create GUI and pass vars
+    global my_gui
+    my_gui = face_anon_gui(shared_state)  # This sends the values to GUI
+
+gui_thread = threading.Thread(target=start_gui, daemon=True)
+gui_thread.start()
+
+# Get the start time of the main loop
+program_start_time = time.time()
+
+# Store a copy of the initial resolution
+last_scale_output_to = list(shared_state['scale_output_to'])
 
 # --- Main Video Processing Loop ---
 while True:
@@ -169,6 +209,13 @@ while True:
 
     # Get frame from webcam
     ret, frame = video_capture.read()
+
+    # Update vcam resolution if we change it in gui.
+    if last_scale_output_to != shared_state['scale_output_to']:
+        cam.close()
+        cam = pyvirtualcam.Camera(width=shared_state['scale_output_to'][0], height=shared_state['scale_output_to'][1], fps=fps_cap)
+        # Store new scale_output_to var value
+        last_scale_output_to = list(shared_state['scale_output_to'])
 
     # print(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)) # DEBUG
     # print(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)) # DEBUG
@@ -180,7 +227,7 @@ while True:
         break
 
     # Flip incoming frame from webcam before processing.
-    if flip_cam_input:
+    if shared_state['flip_cam_input']:
         frame = cv2.flip(frame, 2)
 
     # Process every other frame for performance.
@@ -192,7 +239,7 @@ while True:
         rgb_small_frame = small_frame[:, :, ::-1]
 
         # --- Find all faces and encodings in the current frame. ---
-        if use_cuda_gpu: # GPU
+        if shared_state['use_cuda_gpu']: # GPU
             # Find all faces in the current frame using the CNN model for GPU acceleration.
             face_locations = face_recognition.face_locations(rgb_small_frame, model="cnn")
 
@@ -598,10 +645,10 @@ while True:
                     #             face_label_colour_rgb_final[index] += random.randint(0, 14)
 
 
-                        # print(f"index: {index}") # DEBUG
-                        # print(face_label_colour_rgb_final[index]) # DEBUG
-                        # print(type(face_label_colour_rgb_final[index])) # DEBUG
-                        # print() # DEBUG
+                    # print(f"index: {index}") # DEBUG
+                    # print(face_label_colour_rgb_final[index]) # DEBUG
+                    # print(type(face_label_colour_rgb_final[index])) # DEBUG
+                    # print() # DEBUG
 
                     # print(f"reverse_0: {reverse_0}") # DEBUG
                     # print(f"reverse_1: {reverse_1}") # DEBUG
@@ -612,9 +659,10 @@ while True:
 
 
     # --- FPS counter ---
-    if fps_counter:
-        fps_horz_pos = (scale_output_to[0] // 22) # 15 before title
-        fps_vert_pos = (scale_output_to[0] // 12) # 17 before title
+    # print(shared_state['fps_counter']) # DEBUG
+    if shared_state['fps_counter']: # We now access the shared state between here and GUI
+        fps_horz_pos = (shared_state['scale_output_to'][0] // 22) # 15 before title, fps_horz_pos = (scale_output_to[0] // 22) # 15 before title
+        fps_vert_pos = (shared_state['scale_output_to'][0] // 12) # 17 before title
 
         # print(fps_horz_pos) # DEBUG
         # print(fps_vert_pos) # DEBUG
@@ -624,15 +672,15 @@ while True:
 
     fps = (1.0 / (time.time() - start_time)) # FPS = 1 / time to process loop
 
-    if fps >= cam_fps:
-        fps = 30
+    if fps >= fps_cap:
+        fps = fps_cap
 
 
 
     # --- Title text ---
     if title:
-        title_horz_pos = (scale_output_to[0] // 22)
-        title_vert_pos = (scale_output_to[0] // 17)
+        title_horz_pos = (shared_state['scale_output_to'][0] // 22)
+        title_vert_pos = (shared_state['scale_output_to'][0] // 17)
 
     # print(title_horz_pos) # DEBUG
     # print(title_vert_pos) # DEBUG
@@ -654,19 +702,19 @@ while True:
 
 
     # Scale frame resolution if different one compared to camera res is specified
-    if not (scale_output_to[0] == int(cam_horz_res) and scale_output_to[1] == int(cam_vert_res)):
-        frame = cv2.resize(frame, scale_output_to) # Scale the frame image.
+    if not (shared_state['scale_output_to'][0] == int(cam_horz_res) and shared_state['scale_output_to'][1] == int(cam_vert_res)):
+        frame = cv2.resize(frame, shared_state['scale_output_to']) # Scale the frame image.
 
 
     # Display the resulting image in our window.
     cv2.imshow('Roadbobek Cam', frame)
 
     # Flip frame before outputing to virtual camera
-    if flip_output_to_cam:
+    if shared_state['flip_output_to_vcam']:
         frame = cv2.flip(frame, 2)
 
     # Display frame in virtual webcam, for eg OBS virtual camera
-    if output_to_vcam:
+    if shared_state['output_to_vcam']: # if output_to_vcam:
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         cam.send(rgb_frame)
 
