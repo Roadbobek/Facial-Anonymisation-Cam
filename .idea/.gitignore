@@ -202,3 +202,7 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+# I never even used Cursor for this?
+
+# o.o
+silly_images/
