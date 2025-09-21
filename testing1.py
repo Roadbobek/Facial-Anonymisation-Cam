@@ -69,4 +69,3 @@ while True:
 
 # Destroy all OpenCV windows
 cv2.destroyAllWindows()
-
