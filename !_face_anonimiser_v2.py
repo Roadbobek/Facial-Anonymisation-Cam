@@ -1,9 +1,9 @@
 import os
 
-# Add the paths to the CUDA and cuDNN bin directories for dlib, for Python 3.9 compatibility
+# Add the paths to the CUDA and cuDNN bin directories for dlib with CUDA support, for Python 3.9 compatibility
 os.add_dll_directory("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.0/bin/x64")
 os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v9.12/bin/13.0")
-# os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v9.12/bin/12.9")
+## os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v9.12/bin/12.9")
 
 import dlib
 import cv2
