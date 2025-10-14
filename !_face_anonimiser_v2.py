@@ -1,8 +1,8 @@
 import os
 
 # Add the paths to the CUDA and cuDNN bin directories for dlib with CUDA support, for Python 3.9 compatibility
-os.add_dll_directory("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.0/bin/x64")
-os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v9.12/bin/13.0")
+# os.add_dll_directory("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.0/bin/x64")
+# os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v9.12/bin/13.0")
 ## os.add_dll_directory("C:/Program Files/NVIDIA/CUDNN/v9.12/bin/12.9")
 
 import dlib
@@ -27,7 +27,7 @@ flip_cam_input = False # Some apps, for eg discord automatically flip your camer
 
 flip_output_to_vcam = False # Some apps, for eg discord automatically flip your camera. This is used to combat that.
 
-use_cuda_gpu = True # False will use CPU
+use_cuda_gpu = False # False will use CPU
 
 scale_output_to = [1920, 1080] # Resolution to scale the final image output to.
 
